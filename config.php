@@ -8,17 +8,15 @@
 		'password'		=> 'password',
 		'cookie_file'	=> realpath(__DIR__) . '/cookie.txt',
 		'tools'         => array(
-			'mkdir'     => '/bin/mkdir',
-			'wget'      => '/usr/bin/wget',
-			'chmod'     => '/bin/chmod'
+			'wget'      => '/usr/bin/wget'
 		),
 		'watch'         => 1,
 		'language'      => 'ru', // ru | en
 		'only_hq'       => FALSE,
 		'download_all'  => TRUE,
-		'tasks'			=> 999,
+		'tasks'			=> 5,
 		'email'         => array('mail@me.com'),
-		'download_dir'  => '/c/media/Turbofilm',
-		'log_file'      => '/c/media/Turbofilm/downloads.log',
+		'download_dir' 	=> realpath( __DIR__ ) . '/downloads',
+		'log_file' 		=> realpath( __DIR__ ) . '/downloads.log',
 	);
 
