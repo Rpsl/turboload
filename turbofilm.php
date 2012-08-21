@@ -1,7 +1,4 @@
 <?php
-	//define('DEBUG', TRUE);
-	define('DEBUG', FALSE);
-
 	setlocale(LC_CTYPE, "en_US.UTF-8");
 
 	error_reporting(E_ALL);
@@ -14,13 +11,13 @@
 
 	if( file_exists( $pid_file ) ){ die(); }
 
-	#shell_exec('touch ' . $pid_file );
+	shell_exec('touch ' . $pid_file );
 
 	include_once( realpath( __DIR__ ) .'/includes/etask.class.php' );
 	include_once( realpath( __DIR__ ) .'/includes/episode.class.php' );
 	include_once( realpath( __DIR__ ) .'/includes/turbofilm.class.php' );
 
-	include_once( realpath( __DIR__ ) . '/my_config.php' );
+	include_once( realpath( __DIR__ ) . '/config.php' );
 
 
 	/**

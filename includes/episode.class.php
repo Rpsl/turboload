@@ -84,10 +84,12 @@
 			}
 
 			// escapeshellarg и escapeshellcmd не экранируют пробелы
-			$this->path = str_replace(
-				" ", "\\ ",
-				TurboFilm::$config['download_dir'] . '/' . $serial_name . '/Season ' . $found[2] . '/' . $this->name .'.mp4'
-			);
+//			$this->path = str_replace(
+//				" ", "\\ ",
+//				TurboFilm::$config['download_dir'] . '/' . $serial_name . '/Season ' . $found[2] . '/' . $this->name .'.mp4'
+//			);
+
+			$this->path = TurboFilm::$config['download_dir'] . '/' . $serial_name . '/Season ' . $found[2] . '/' . $this->name .'.mp4';
 
 			if( file_exists( $this->path ) )
 			{
@@ -221,9 +223,7 @@
 			l('Старт загрузки: ' . $this->url );
 
 			exec(
-				escapeshellcmd(
-					TurboFilm::$config['tools']['wget'] . ' --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O "' . $this->path .'" '. escapeshellarg( $this->url_cdn )
-				),
+				TurboFilm::$config['tools']['wget'] . ' --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . escapeshellarg( $this->path ).' '. escapeshellarg( $this->url_cdn ),
 				$output,
 				$retvar
 			);
