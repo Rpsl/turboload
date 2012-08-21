@@ -13,6 +13,9 @@
 
 	shell_exec('touch ' . $pid_file );
 
+	include_once( realpath( __DIR__ ) . '/includes/simple_html_dom.php');
+	include_once( realpath( __DIR__ ) . '/includes/class.phpmailer-lite.php');
+
 	include_once( realpath( __DIR__ ) .'/includes/etask.class.php' );
 	include_once( realpath( __DIR__ ) .'/includes/episode.class.php' );
 	include_once( realpath( __DIR__ ) .'/includes/turbofilm.class.php' );
