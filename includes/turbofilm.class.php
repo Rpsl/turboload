@@ -59,13 +59,13 @@
 					{
 						$ep = new Episode( 'http://turbofilm.tv' . $url->href );
 
-						$url = $ep->get('url_cdn');
+						$url = $ep->url_cdn;
 
 						if( !empty( $url ) )
 						{
 							$task->addEpisode( $ep );
 
-							l( 'Серия ' . $ep->get('name') .' добавленна в очередь' );
+							l( 'Серия ' . $ep->name .' добавленна в очередь' );
 						}
 					}
 				}
@@ -136,7 +136,7 @@
 					{
 						$ep = new Episode('http://turbofilm.tv' . $ser->href );
 
-						TurboFilm::_curl('http://turbofilm.tv/services/epwatch', array('eid' => $ep->get('eid'), 'watch' => 0) );
+						TurboFilm::_curl('http://turbofilm.tv/services/epwatch', array('eid' => $ep->eid, 'watch' => 0) );
 					}
 					else
 					{
@@ -235,6 +235,6 @@
 		 */
 		static public function deleteNullFiles()
 		{
-			exec('find ' . escapeshellarg( TurboFilm::$config['download_dir'] ) . ' -iname "*.mp4" -size 0c | xargs rm -f {}\;', $output, $retval );
+			exec('find ' . escapeshellarg( TurboFilm::$config['download_dir'] ) . ' -iname "*.mp4" -size 0c -print0 | xargs rm -f {}\;', $output, $retval );
 		}
 	}

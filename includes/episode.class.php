@@ -1,12 +1,14 @@
 <?php
 	class Episode
 	{
-		private $name;
-		private $url;
-		private $url_cdn;
-		private $path;
-		private $description;
-		private $eid;
+//		private $name;
+//		private $url;
+//		private $url_cdn;
+//		private $path;
+//		private $description;
+//		private $eid;
+
+		private $data = array();
 
 		public  $okay = TRUE;
 		public	$error_code;
@@ -15,7 +17,7 @@
 
 		public function __construct( $url, $options = array(), $parse = TRUE )
 		{
-			$this->url	= $url;
+			$this->url = $url;
 
 			if( !empty( $options['name'] ) )
 			{
@@ -33,39 +35,61 @@
 			}
 		}
 
-		public function get( $param )
+		public function __get( $param )
 		{
-			if( isset( $this->$param ) )
+			if ( array_key_exists( $param, $this->data ) )
 			{
-				return $this->$param;
-			}
+                return $this->data[ $param ];
+	        }
 
 			return FALSE;
 		}
 
-		public function set( $param, $value = NULL )
+		public function __set( $param, $value = NULL )
 		{
-			$this->$param = $value;
-
-			return TRUE;
+			$this->data[ $param ] = $value;
 		}
+
+		public function __isset( $param )
+	    {
+	        return isset( $this->data[ $param ] );
+	    }
+
+
+//
+//		public function get( $param )
+//		{
+//			if( isset( $this->$param ) )
+//			{
+//				return $this->$param;
+//			}
+//
+//			return FALSE;
+//		}
+//
+//		public function set( $param, $value = NULL )
+//		{
+//			$this->$param = $value;
+//
+//			return TRUE;
+//		}
 
 		public function parse()
 		{
-			preg_match( '~http://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->get('url'), $found );
+			preg_match( '~http://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->url, $found );
 
 			if( empty( $found ) )
 			{
 				$this->error_code = self::INVALID_URL_EPISODE;
-				l('EP:	INVALIDE URL EPISODE: ' . $this->get('url') . ' | ' . __LINE__ , 2 );
+				l('EP:	INVALIDE URL EPISODE: ' . $this->url . ' | ' . __LINE__ , 2 );
 				return FALSE;
 			}
 
-			$res = TurboFilm::_curl( $this->get('url') );
+			$res = TurboFilm::_curl( $this->url );
 
 			if( empty( $res) )
 			{
-				l('EP:	Empty body: '. $this->get('url') . ' | '. __LINE__, 2 );
+				l('EP:	Empty body: '. $this->url . ' | '. __LINE__, 2 );
 				return FALSE;
 			}
 
@@ -74,15 +98,12 @@
 			$name = $html->find('.tdesc', 0);
 			$name = $name->plaintext;
 
+			$serial_name = $html->find('.mains a', 0);
+			$serial_name = $serial_name->plaintext;
+
 			if( preg_match('~Описание серии "(.*?)"~ui', $name, $f_name ) )
 			{
-				$name = $f_name[1] ;
-
-				$name = $found[3] .'.'. preg_replace('~([\s]+)~', '_', $name );
-				$this->set('name', html_entity_decode( $name ) );
-
-				unset( $name );
-
+				$this->name = html_entity_decode( 's'.$found[2].'e'.sprintf('%1$02d', $found[3]).' ' . $f_name[1] );
 			}
 			else
 			{
@@ -90,23 +111,20 @@
 				return FALSE;
 			}
 
-			$this->set(
-				'path',
-				TurboFilm::$config['download_dir'] . '/' . $found[1] . '/Season' . $found[2] . '/' . $this->get('name') .'.mp4'
-			);
+			$this->path = str_replace(" ", "\\ ", TurboFilm::$config['download_dir'] . '/' . $serial_name . '/Season ' . $found[2] . '/' . $this->name .'.mp4' );
 
-			if( file_exists( $this->get('path') ) )
+			if( file_exists( $this->path ) )
 			{
-				l('EP:	File already exists: ' . $this->get('path'), 2 );
+				l('EP:	File already exists: ' . $this->path, 2 );
 
 				// Что бы не кэшировать
 				clearstatcache();
 
-				if( filesize( $this->get('path') ) < 100 )
+				if( filesize( $this->path ) < 100 )
 				{
 					l('EP:  Filesize is broken, remove file', 2 );
 
-					@unlink( $this->get('path') );
+					@unlink( $this->path );
 				}
 				else
 				{
@@ -119,18 +137,8 @@
 			return TRUE;
 		}
 
-		private function getHtmlOfEpisode()
-		{
-		}
-
 		public function makeUrl( $html )
 		{
-			if( empty( $html ) )
-			{
-				// :TODO: Разрулить, т/к/ такой ф-ции пока нету
-				$html = $this->getHtmlOfEpisode();
-			}
-
 			$metadata = $html->find('#metadata', 0)->value;
 
 			$metadata = urldecode( $metadata );
@@ -148,8 +156,8 @@
 
 			$metadata = base64_decode( $metadata .'', TRUE );
 
-			if( empty( $metadata ) ){ l('Cant decode metadata / '. $this->get('url') . ' / ' . __LINE__ ); }
-			if( empty( $metadata ) ){ l('Cant decode metadata / '. $this->get('url') . ' / ' . __LINE__ ); }
+			if( empty( $metadata ) ){ l('Cant decode metadata / '. $this->url . ' / ' . __LINE__ ); }
+			if( empty( $metadata ) ){ l('Cant decode metadata / '. $this->url . ' / ' . __LINE__ ); }
 
 			$metadata = str_replace('utf-16', 'utf-8', $metadata );
 			$metadata = simplexml_load_string( $metadata );
@@ -162,12 +170,11 @@
 			$b = sha1( TurboFilm::_makeCookie() . rand(1000,9999));
 			$a = sha1( $b . $metadata->eid . 'A2DC51DE0F8BC1E9' );
 
-			$url = 'http://cdn.turbofilm.tv/' . sha1( TurboFilm::$config['language'] ) . '/' . (int)$metadata->eid . '/'
+			$this->url_cdn = 'http://cdn.turbofilm.tv/' . sha1( TurboFilm::$config['language'] ) . '/' . (int)$metadata->eid . '/'
 				 . ( !empty( $metadata->sources2->h1 ) ? $metadata->sources2->hq : $metadata->sources2->default )
 				 . '/0/' . TurboFilm::_makeCookie() . '/' . $b . '/' . $a . '/r';
 
-			$this->set('eid', (int)$metadata->eid );
-			$this->set('url_cdn', $url );
+			$this->eid = (int)$metadata->eid;
 
 			return TRUE;
 		}
@@ -204,23 +211,22 @@
 
 		public function download()
 		{
-			$cdn = $this->get('url_cdn');
+			$cdn = $this->url_cdn;
 
-			if( empty( $cdn ) ){ l('У серии нету урла для скачивания, omg | ' . $this->get('name') ); return FALSE; }
+			if( empty( $cdn ) ){ l('У серии нету урла для скачивания, omg | ' . $this->name ); return FALSE; }
 
-			l('Начинаем загрузку: ' . $this->get('name')  . ' | ' . $this->get('path') );
+			l('Начинаем загрузку: ' . $this->name . ' | ' . $this->path );
 
-			$path = pathinfo( $this->get('path') ) ;
+			$path = pathinfo( $this->path ) ;
 
 			shell_exec( TurboFilm::$config['tools']['mkdir'] . ' -p ' . $path['dirname'] );
-			chmod( $path['dirname'], 0777 );
 
-			l('Старт загрузки: ' . $this->get('url') );
-			
+			l('Старт загрузки: ' . $this->url );
+
 			$from 	= array("'", '&', ";", '(', ')', '.');
 			$to	= array("\'", '\&', '\;', '\(', '\)', '\.');
 
-			exec( TurboFilm::$config['tools']['wget'] . ' --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . str_replace($from, $to,  $this->get('path') ) .' '. escapeshellarg( $this->get('url_cdn') ), $output, $retvar );
+			exec( TurboFilm::$config['tools']['wget'] . ' --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . str_replace($from, $to,  $this->path ) .' '. escapeshellarg( $this->url_cdn ), $output, $retvar );
 
 			l('Загрузка завершенна, код wget: '. $retvar );
 
@@ -228,26 +234,26 @@
 			{
 				// Ok
 
-				l('[!] Считаем загрузку успешной / ' . $this->get('name') . ' / ' . $this->get('path') );
+				l('[!] Считаем загрузку успешной / ' . $this->name . ' / ' . $this->path );
 
-				$this->set('downloaded', TRUE );
+				$this->downloaded = TRUE;
 
 				if( !empty( TurboFilm::$config['watch'] ) )
 				{
-					TurboFilm::_curl('http://turbofilm.tv/services/epwatch', array('eid' => $this->get('eid'), 'watch' => 1) );
+					TurboFilm::_curl('http://turbofilm.tv/services/epwatch', array('eid' => $this->eid, 'watch' => 1) );
 				}
 			}
 			else
 			{
-				l('Считаем загрузку не успешной, удаляем '. $this->get('path') );
-				shell_exec('rm -f ' . $this->get('path') );
+				l('Считаем загрузку не успешной, удаляем '. $this->path );
+				shell_exec('rm -f ' . $this->path );
 			}
 		}
 
 
 		public function __destruct()
 		{
-			if( isset( $this->downloaded ) && $this->downloaded === TRUE )
+			if( $this->downloaded === TRUE )
 			{
 				if( !empty( TurboFilm::$config['email'] ) )
 				{
@@ -260,13 +266,12 @@
 						$mail->AddAddress( $email );
 					}
 
-					$mail->Subject = 'TurboLoader | ' . $this->get('name') ;
+					$mail->Subject = 'TurboLoader | ' . $this->name ;
 
-					$mail->MsgHTML('<html><p>Серия '. $this->get('url') .' закачана.</p><p>&nbsp;</p><p>'. $this->get('path') .'</p></html>');
+					$mail->MsgHTML('<html><p>Серия '. $this->url .' закачана.</p><p>&nbsp;</p><p>'. $this->path .'</p></html>');
 
 					$mail->Send();
 				}
 			}
 		}
-
 	}

@@ -68,16 +68,14 @@
 
 	if( !TurboFilm::checkLogin() ){ l('Authorize error'); return FALSE; }
 
-	// Ну, на всякий случай
-	exec('chown -R admin:admin '. TurboFilm::$config['download_dir'] );
-	exec('chmod -R 0777 '. TurboFilm::$config['download_dir'] );
-
 	#TurboFilm::getAllSeries(); // Скачиваем вообще все ( мои сериалы )
 	TurboFilm::getNewSeries(); // Скачиваем только новинки
 
-
 	Etask::download_tasks();
 
+	// Ну, на всякий случай
+	shell_exec('chown -R admin:admin '. TurboFilm::$config['download_dir'] );
+	shell_exec('chmod -R 0777 '. TurboFilm::$config['download_dir'] );
 
 	@unlink( $pid_file );
 
