@@ -1,38 +1,30 @@
 <?php
+
+	/**
+	 * Episode
+	 *
+	 * Обеспечивает взаимодействие на уровне одной серии.
+	 * - Парсинг данных
+	 * - Генерация урла
+	 * - Скачивание серии
+	 * - Уведомление по email
+	 *
+	 * Example:
+	 *
+	 *      $ep = new Episode('http://turbofilm.tv/Watch/BreakingBad/Season2/Episode1');
+	 *      $ep->download();
+	 *      unset( $ep );
+	 *
+	 */
 	class Episode
 	{
-//		private $name;
-//		private $url;
-//		private $url_cdn;
-//		private $path;
-//		private $description;
-//		private $eid;
-
 		private $data = array();
 
-		public  $okay = TRUE;
-		public	$error_code;
-
-		const INVALID_URL_EPISODE = 101;
-
-		public function __construct( $url, $options = array(), $parse = TRUE )
+		public function __construct( $url )
 		{
 			$this->url = $url;
 
-			if( !empty( $options['name'] ) )
-			{
-				$this->name = $options['name'];
-			}
-
-			if( !empty( $options['path'] ) )
-			{
-				$this->path	= $options['path'];
-			}
-
-			if( $parse || ( empty( $this->name ) ) )
-			{
-				$this->okay = $this->parse();
-			}
+			$this->parse();
 		}
 
 		public function __get( $param )
@@ -55,32 +47,12 @@
 	        return isset( $this->data[ $param ] );
 	    }
 
-
-//
-//		public function get( $param )
-//		{
-//			if( isset( $this->$param ) )
-//			{
-//				return $this->$param;
-//			}
-//
-//			return FALSE;
-//		}
-//
-//		public function set( $param, $value = NULL )
-//		{
-//			$this->$param = $value;
-//
-//			return TRUE;
-//		}
-
 		public function parse()
 		{
 			preg_match( '~http://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->url, $found );
 
 			if( empty( $found ) )
 			{
-				$this->error_code = self::INVALID_URL_EPISODE;
 				l('EP:	INVALIDE URL EPISODE: ' . $this->url . ' | ' . __LINE__ , 2 );
 				return FALSE;
 			}
@@ -111,7 +83,11 @@
 				return FALSE;
 			}
 
-			$this->path = str_replace(" ", "\\ ", TurboFilm::$config['download_dir'] . '/' . $serial_name . '/Season ' . $found[2] . '/' . $this->name .'.mp4' );
+			// escapeshellarg и escapeshellcmd не экранируют пробелы
+			$this->path = str_replace(
+				" ", "\\ ",
+				TurboFilm::$config['download_dir'] . '/' . $serial_name . '/Season ' . $found[2] . '/' . $this->name .'.mp4'
+			);
 
 			if( file_exists( $this->path ) )
 			{
@@ -188,6 +164,17 @@
 			return $c;
 		}
 
+		/**
+		 * @static
+		 *
+		 * Проверка параметров данной серии.
+		 * - Язык
+		 * - Качество
+		 *
+		 * @param $metadata
+		 *
+		 * @return bool
+		 */
 		static private function _checkEpisodeParams( $metadata )
 		{
 			$return = TRUE;
@@ -209,31 +196,42 @@
 			return $return;
 		}
 
+		/**
+		 * Скачивание серии.
+		 *
+		 * Скачивание происходит с помощью wget, т.к. это самый
+		 * простой способ поддерживать переходы и докачку файла при обрыве потока.
+		 *
+		 * Проверяется код ответа wget и только если он успешный (int) 0 серия считается скачаной.
+		 * Если код ответа отличается, то попытка считается не успешной и файл удаляется.
+		 *
+		 * Если серия скачалась и в конфиге есть соответсвующая настройка, то серия отмечается как просмотренная.
+		 *
+		 */
 		public function download()
 		{
-			$cdn = $this->url_cdn;
-
-			if( empty( $cdn ) ){ l('У серии нету урла для скачивания, omg | ' . $this->name ); return FALSE; }
+			// Сюда нужно запилить проверку, что все данные есть и серию можно скачивать.
 
 			l('Начинаем загрузку: ' . $this->name . ' | ' . $this->path );
 
 			$path = pathinfo( $this->path ) ;
 
-			shell_exec( TurboFilm::$config['tools']['mkdir'] . ' -p ' . $path['dirname'] );
+			shell_exec( 'mkdir -p ' . escapeshellarg( $path['dirname'] ) );
 
 			l('Старт загрузки: ' . $this->url );
 
-			$from 	= array("'", '&', ";", '(', ')', '.');
-			$to	= array("\'", '\&', '\;', '\(', '\)', '\.');
-
-			exec( TurboFilm::$config['tools']['wget'] . ' --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . str_replace($from, $to,  $this->path ) .' '. escapeshellarg( $this->url_cdn ), $output, $retvar );
+			exec(
+				escapeshellcmd(
+					TurboFilm::$config['tools']['wget'] . ' --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O "' . $this->path .'" '. escapeshellarg( $this->url_cdn )
+				),
+				$output,
+				$retvar
+			);
 
 			l('Загрузка завершенна, код wget: '. $retvar );
 
 			if( $retvar === 0 )
 			{
-				// Ok
-
 				l('[!] Считаем загрузку успешной / ' . $this->name . ' / ' . $this->path );
 
 				$this->downloaded = TRUE;
@@ -250,28 +248,48 @@
 			}
 		}
 
+		/**
+		 * Проверяем скачался ли эпизод и если необходимо, то отправляем уведомление по email
+		 */
+		public function sendEmail()
+		{
+			// Не будем отправлять уведомления для одной серии больше чем 1 раз
+			if( $this->emailed === TRUE )
+			{
+				return FALSE;
+			}
 
+			if( $this->downloaded === TRUE && !empty( TurboFilm::$config['email'] ) )
+			{
+				$mail = new PHPMailerLite();
+
+				// А вдруг туда именнованый масив засунут?
+				$mail->SetFrom( TurboFilm::$config['email'][0], 'TurboLoader');
+
+				foreach( TurboFilm::$config['email'] as $email )
+				{
+					$mail->AddAddress( $email );
+				}
+
+				$mail->Subject = 'TurboLoader | ' . $this->name ;
+
+				$mail->MsgHTML('<html><p>Серия '. $this->url .' закачана.</p><p>&nbsp;</p><p>'. $this->path .'</p></html>');
+
+				$mail->Send();
+
+				$this->emailed = TRUE;
+
+				return TRUE;
+			}
+
+			return FALSE;
+		}
+
+		/**
+		 * При умирании, дернем отправку уведомлений, что бы не делать это руками.
+		 */
 		public function __destruct()
 		{
-			if( $this->downloaded === TRUE )
-			{
-				if( !empty( TurboFilm::$config['email'] ) )
-				{
-					$mail = new PHPMailerLite();
-
-					$mail->SetFrom( TurboFilm::$config['email'][0], 'TurboLoader');
-
-					foreach( TurboFilm::$config['email'] as $email )
-					{
-						$mail->AddAddress( $email );
-					}
-
-					$mail->Subject = 'TurboLoader | ' . $this->name ;
-
-					$mail->MsgHTML('<html><p>Серия '. $this->url .' закачана.</p><p>&nbsp;</p><p>'. $this->path .'</p></html>');
-
-					$mail->Send();
-				}
-			}
+			$this->sendEmail();
 		}
 	}

@@ -30,6 +30,13 @@
 			return TRUE;
 		}
 
+		/**
+		 * Парсинг страницы "Мои Серии", фильтрация серий подходящих по параметрам и добавление их в очередь.
+		 *
+		 *
+		 * @static
+		 * @return bool
+		 */
 		static public function getNewSeries()
 		{
 			l('Запрашиваем список новых серий', 2 );
@@ -52,16 +59,14 @@
 
 			foreach( $res as $item )
 			{
-
 				foreach( $item->find('a') as $url )
 				{
 					if( $task->ok() && preg_match('~/Watch/~u', $url->href ) )
 					{
 						$ep = new Episode( 'http://turbofilm.tv' . $url->href );
 
-						$url = $ep->url_cdn;
-
-						if( !empty( $url ) )
+						// Если есть url_cdn, то получается что серия распарсилась и подходит под параметры
+						if( !empty( $ep->url_cdn ) )
 						{
 							$task->addEpisode( $ep );
 
@@ -74,7 +79,9 @@
 			return TRUE;
 		}
 
-
+		/**
+		 * @static
+		 */
 		static public function getAllSeries()
 		{
 			l('Начинаем процесс скачивания всех серий');
@@ -224,7 +231,6 @@
 			else
 			{
 				l('COOKIE VALUE NON FOUND', 0 );
-				// :TODO: Тут бы эксепшн кидать и выходить.
 				return FALSE;
 			}
 		}

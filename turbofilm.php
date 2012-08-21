@@ -14,13 +14,13 @@
 
 	if( file_exists( $pid_file ) ){ die(); }
 
-	shell_exec('touch ' . $pid_file );
+	#shell_exec('touch ' . $pid_file );
 
 	include_once( realpath( __DIR__ ) .'/includes/etask.class.php' );
 	include_once( realpath( __DIR__ ) .'/includes/episode.class.php' );
 	include_once( realpath( __DIR__ ) .'/includes/turbofilm.class.php' );
 
-	include_once( realpath( __DIR__ ) . '/config.php' );
+	include_once( realpath( __DIR__ ) . '/my_config.php' );
 
 
 	/**
@@ -36,6 +36,8 @@
 	 */
 	function l( $string, $level = 0 )
 	{
+		// На некоторых примитивных устройствах ( роутеры/насы )
+		// проще весь вывод транслитировать чем разбираться с локалями и кодировками.
 		$tr = array(
 	        "А"=>"a","Б"=>"b","В"=>"v","Г"=>"g",
 	        "Д"=>"d","Е"=>"e","Ж"=>"j","З"=>"z","И"=>"i",
@@ -54,15 +56,21 @@
 
 	    $string = strtr($string,$tr);
 
-		if( 1<2 || defined('DEBUG') && DEBUG === TRUE )
-		{
-			echo $string . "\n";
-		}
+		echo $string . "\n";
 
-		shell_exec('echo ['.date('Y/m/d H:i:s').'] ' . escapeshellarg( $string ) .' >> ' . TurboFilm::$config['log_file'] );
+		shell_exec(
+			escapeshellcmd(
+				'echo ['.date('Y/m/d H:i:s').'] ' . escapeshellarg( $string ) .' >> ' . TurboFilm::$config['log_file']
+			)
+		);
 	}
 
 	l("start");
+
+	if( !is_dir( TurboFilm::$config['download_dir'] ) )
+	{
+		shell_exec('mkdir -p '. escapeshellarg( TurboFilm::$config['download_dir'] ) );
+	}
 
 	TurboFilm::deleteNullFiles();
 
@@ -74,7 +82,7 @@
 	Etask::download_tasks();
 
 	// Ну, на всякий случай
-	shell_exec('chown -R admin:admin '. TurboFilm::$config['download_dir'] );
+	shell_exec('chown -R '.TurboFilm::$config['owner'].' '. TurboFilm::$config['download_dir'] );
 	shell_exec('chmod -R 0777 '. TurboFilm::$config['download_dir'] );
 
 	@unlink( $pid_file );
