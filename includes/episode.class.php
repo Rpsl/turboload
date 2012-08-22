@@ -31,8 +31,8 @@
 		{
 			if ( array_key_exists( $param, $this->data ) )
 			{
-                return $this->data[ $param ];
-	        }
+				return $this->data[ $param ];
+			}
 
 			return FALSE;
 		}
@@ -82,12 +82,6 @@
 				l('Cant detect name of episode / '. $name );
 				return FALSE;
 			}
-
-			// escapeshellarg и escapeshellcmd не экранируют пробелы
-//			$this->path = str_replace(
-//				" ", "\\ ",
-//				TurboFilm::$config['download_dir'] . '/' . $serial_name . '/Season ' . $found[2] . '/' . $this->name .'.mp4'
-//			);
 
 			$this->path = TurboFilm::$config['download_dir'] . '/' . $serial_name . '/Season ' . $found[2] . '/' . $this->name .'.mp4';
 
