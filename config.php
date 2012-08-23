@@ -20,10 +20,10 @@
 
 	TurboFilm::$config = array(
 		'login'			=> 'login',
-		'password'		=> 'password',
+        'password'		=> 'password',
 		'watch'         => 1,
 		'language'      => 'ru', // ru | en
-		'tasks'			=> 5,
+		'tasks'         => 5,
 		'email'         => array('mail@me.com'),
 		'download_dir' 	=> realpath( __DIR__ ) . '/downloads',
 

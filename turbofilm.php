@@ -9,18 +9,27 @@
 
 	$pid_file = realpath( __DIR__ ) . '/download.pid';
 
+
+	// TODO По хорошему, в pid файл нужно класть getmypid() и тут не просто умирать,
+	// а проверять есть ли процесс с таким pid. Если его нету, то грохать pid файл и продолжать работу.
+	// Отрефакторите, а?
 	if( file_exists( $pid_file ) ){ die(); }
+
+	//	На моем насе были проблемы с вызовом mkdir(). Функция не хотела работать,
+	//	в то время, как вызовы нативных команд работали прекрасно.
+	//	Быть может это из-за SPARC, но там супер урезанный линукс и пыха в таком состояние.
+	//	В итоге оказалось проще все подобные вызовы перевести на shell_exec()
 
 	shell_exec('touch ' . $pid_file );
 
-	include_once( realpath( __DIR__ ) . '/includes/simple_html_dom.php');
-	include_once( realpath( __DIR__ ) . '/includes/class.phpmailer-lite.php');
+	require_once( realpath( __DIR__ ) . '/includes/simple_html_dom.php');
+	require_once( realpath( __DIR__ ) . '/includes/class.phpmailer-lite.php');
 
-	include_once( realpath( __DIR__ ) .'/includes/etask.class.php' );
-	include_once( realpath( __DIR__ ) .'/includes/episode.class.php' );
-	include_once( realpath( __DIR__ ) .'/includes/turbofilm.class.php' );
+	require_once( realpath( __DIR__ ) .'/includes/etask.class.php' );
+	require_once( realpath( __DIR__ ) .'/includes/episode.class.php' );
+	require_once( realpath( __DIR__ ) .'/includes/turbofilm.class.php' );
 
-	include_once( realpath( __DIR__ ) . '/config.php' );
+	require_once( realpath( __DIR__ ) . '/config.php' );
 
 
 	/**
