@@ -83,6 +83,7 @@
 				return FALSE;
 			}
 
+			$this->serial_name = $serial_name;
 			$this->path = TurboFilm::$config['download_dir'] . '/' . $serial_name . '/Season ' . $found[2] . '/' . $this->name .'.mp4';
 
 			if( file_exists( $this->path ) )
@@ -265,7 +266,7 @@
 					$mail->AddAddress( $email );
 				}
 
-				$mail->Subject = 'TurboLoader | ' . $this->name ;
+				$mail->Subject = 'TurboLoader | '  $this->serial_name . ' | '. $this->name ;
 
 				$mail->MsgHTML('<html><p>Серия '. $this->url .' закачана.</p><p>&nbsp;</p><p>'. $this->path .'</p></html>');
 
