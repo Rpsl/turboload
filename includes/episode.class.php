@@ -266,7 +266,7 @@
 					$mail->AddAddress( $email );
 				}
 
-				$mail->Subject = 'TurboLoader | '  $this->serial_name . ' | '. $this->name ;
+				$mail->Subject = 'TurboLoader | ' . $this->serial_name . ' | '. $this->name ;
 
 				$mail->MsgHTML('<html><p>Серия '. $this->url .' закачана.</p><p>&nbsp;</p><p>'. $this->path .'</p></html>');
 
