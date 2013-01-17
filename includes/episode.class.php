@@ -218,7 +218,7 @@
 			l('Старт загрузки: ' . $this->url );
 
 			exec(
-				TurboFilm::$config['tools']['wget'] . ' --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . escapeshellarg( $this->path ).' '. escapeshellarg( $this->url_cdn ),
+				TurboFilm::$config['tools']['wget'] . ' --no-check-certificate --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . escapeshellarg( $this->path ).' '. escapeshellarg( $this->url_cdn ),
 				$output,
 				$retvar
 			);
