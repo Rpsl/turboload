@@ -90,10 +90,10 @@
 
 	Etask::download_tasks();
 
+	@unlink( $pid_file );
+
 	// Ну, на всякий случай
 	shell_exec('chown -R '.TurboFilm::$config['owner'].' '. TurboFilm::$config['download_dir'] );
 	shell_exec('chmod -R 0777 '. TurboFilm::$config['download_dir'] );
-
-	@unlink( $pid_file );
 
 	l("\n\n\n");

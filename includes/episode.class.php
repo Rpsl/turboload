@@ -11,7 +11,7 @@
 	 *
 	 * Example:
 	 *
-	 *      $ep = new Episode('http://turbofilm.tv/Watch/BreakingBad/Season2/Episode1');
+	 *      $ep = new Episode('https://turbofilm.tv/Watch/BreakingBad/Season2/Episode1');
 	 *      $ep->download();
 	 *      unset( $ep );
 	 *
@@ -49,7 +49,7 @@
 
 		public function parse()
 		{
-			preg_match( '~http://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->url, $found );
+			preg_match( '~https://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->url, $found );
 
 			if( empty( $found ) )
 			{
@@ -143,7 +143,7 @@
 			$b = sha1( TurboFilm::_makeCookie() . rand(1000,9999));
 			$a = sha1( $b . $metadata->eid . 'A2DC51DE0F8BC1E9' );
 
-			$this->url_cdn = 'http://cdn.turbofilm.tv/' . sha1( TurboFilm::$config['language'] ) . '/' . (int)$metadata->eid . '/'
+			$this->url_cdn = 'https://cdn.turbofilm.tv/' . sha1( TurboFilm::$config['language'] ) . '/' . (int)$metadata->eid . '/'
 				 . ( !empty( $metadata->sources2->h1 ) ? $metadata->sources2->hq : $metadata->sources2->default )
 				 . '/0/' . TurboFilm::_makeCookie() . '/' . $b . '/' . $a . '/r';
 
@@ -233,7 +233,7 @@
 
 				if( !empty( TurboFilm::$config['watch'] ) )
 				{
-					TurboFilm::_curl('http://turbofilm.tv/services/epwatch', array('eid' => $this->eid, 'watch' => 1) );
+					TurboFilm::_curl('https://turbofilm.tv/services/epwatch', array('eid' => $this->eid, 'watch' => 1) );
 				}
 			}
 			else

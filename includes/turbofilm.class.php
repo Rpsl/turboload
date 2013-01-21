@@ -13,15 +13,15 @@
 		 */
 		static public function checkLogin( $reload = FALSE )
 		{
-			$res = self::_curl('http://turbofilm.tv/');
+			$res = self::_curl('https://turbofilm.tv/');
 
 			if( !empty( $res ) && preg_match('~(Только верующий сможет пройти)~usi', $res ) )
 			{
-				self::_curl('http://turbofilm.tv/Signin', array( 'login' => self::$config['login'], 'passwd' => self::$config['password'], 'remember' => 'on' ) );
+				self::_curl('https://turbofilm.tv/Signin', array( 'login' => self::$config['login'], 'passwd' => self::$config['password'], 'remember' => 'on' ) );
 
 				if( !$reload )
 				{
-					return self::_checkLogin( TRUE );
+					return self::checkLogin( TRUE );
 				}
 
 				return FALSE;
@@ -41,7 +41,7 @@
 		{
 			l('Запрашиваем список новых серий', 2 );
 
-			$res = self::_curl( 'http://turbofilm.tv/My/Series' );
+			$res = self::_curl( 'https://turbofilm.tv/My/Series' );
 
 			if( empty( $res ) ){ l('null body, '. __LINE__, 1 ); return FALSE; }
 
@@ -63,7 +63,7 @@
 				{
 					if( $task->ok() && preg_match('~/Watch/~u', $url->href ) )
 					{
-						$ep = new Episode( 'http://turbofilm.tv' . $url->href );
+						$ep = new Episode( 'https://turbofilm.tv' . $url->href );
 
 						// Если есть url_cdn, то получается что серия распарсилась и подходит под параметры
 						if( !empty( $ep->url_cdn ) )
@@ -92,7 +92,7 @@
 
 		static private function _getMySerials()
 		{
-			$res = self::_curl('http://turbofilm.tv/My');
+			$res = self::_curl('https://turbofilm.tv/My');
 
 			if( empty( $res ) ){ l('Empty body / ' . __LINE__ ); return FALSE; }
 
@@ -103,7 +103,7 @@
 			foreach( $serials->find('a') as $ser )
 			{
 				$seasons = array();
-				$seasons = self::_getSeasonsOfSerial( 'http://turbofilm.tv' . $ser->href );
+				$seasons = self::_getSeasonsOfSerial( 'https://turbofilm.tv' . $ser->href );
 
 				if( empty( $seasons ) ){ l('Не нашли сезонов / ' . $ser->href ); return FALSE; }
 
@@ -127,7 +127,7 @@
 			{
 				l('Запрашиваем список серий сериала / ' . $url );
 
-				$res = self::_curl( 'http://turbofilm.tv' . $url );
+				$res = self::_curl( 'https://turbofilm.tv' . $url );
 
 				if( empty( $res ) ){ l('Empty body / '. $url .' / ' . __LINE__ ); return FALSE; }
 
@@ -141,9 +141,9 @@
 				{
 					if( $task->ok() )
 					{
-						$ep = new Episode('http://turbofilm.tv' . $ser->href );
+						$ep = new Episode('https://turbofilm.tv' . $ser->href );
 
-						TurboFilm::_curl('http://turbofilm.tv/services/epwatch', array('eid' => $ep->eid, 'watch' => 0) );
+						TurboFilm::_curl('https://turbofilm.tv/services/epwatch', array('eid' => $ep->eid, 'watch' => 0) );
 					}
 					else
 					{
@@ -185,7 +185,7 @@
 			curl_setopt($ch, CURLOPT_HEADER, 			FALSE );
 			curl_setopt($ch, CURLOPT_NOBODY, 			FALSE );
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 	TRUE );
-			curl_setopt($ch, CURLOPT_REFERER, 			'http://turbofilm.tv' );
+			curl_setopt($ch, CURLOPT_REFERER, 			'https://turbofilm.tv' );
 			curl_setopt($ch, CURLOPT_USERAGENT, 		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1' );
 			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 	TRUE );
 			curl_setopt($ch, CURLOPT_COOKIEJAR, 		self::$config['cookie_file'] );
@@ -219,6 +219,11 @@
 		 */
 		static public function _makeCookie()
 		{
+			if( !file_exists( self::$config['cookie_file'] ) )
+			{
+				return FALSE;
+			}
+
 
 			$data = file_get_contents( self::$config['cookie_file'] );
 
