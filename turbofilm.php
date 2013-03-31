@@ -19,7 +19,7 @@
     // Проверяем что у нас не просто есть пид, а что такой процесс действительно живет.
     if ( file_exists($pid_file) )
     {
-        $check_pid = file_get_contents( $pid_file );
+        $check_pid = trim( file_get_contents( $pid_file ) );
 
         // @todo В windows рабоатть не будеь
         if( !file_exists( "/proc/$check_pid" ) )
