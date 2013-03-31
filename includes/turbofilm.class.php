@@ -188,6 +188,9 @@
 			curl_setopt($ch, CURLOPT_REFERER, 			'https://turbofilm.tv' );
 			curl_setopt($ch, CURLOPT_USERAGENT, 		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1' );
 			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 	TRUE );
+			curl_setopt($ch,  CURLOPT_SSL_VERIFYHOST, 	0 );
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 	0 );
+
 			curl_setopt($ch, CURLOPT_COOKIEJAR, 		self::$config['cookie_file'] );
 			curl_setopt($ch, CURLOPT_COOKIEFILE, 		self::$config['cookie_file'] );
 			curl_setopt($ch, CURLOPT_COOKIE, 			self::_makeCookie() );
@@ -200,6 +203,7 @@
 
 			$data = curl_exec($ch);
 			$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error( $ch );
 
 			curl_close($ch);
 
@@ -209,7 +213,7 @@
 			}
 			else
 			{
-				l('Not normal http respoce code / ' . $url . ' / ' . $httpCode );
+				l('Not normal http respoce code / ' . $url . ' / ' . $httpCode . ' / ' . $error );
 			}
 		}
 
