@@ -130,7 +130,6 @@
 			$metadata = base64_decode( $metadata .'', TRUE );
 
 			if( empty( $metadata ) ){ l('Cant decode metadata / '. $this->url . ' / ' . __LINE__ ); }
-			if( empty( $metadata ) ){ l('Cant decode metadata / '. $this->url . ' / ' . __LINE__ ); }
 
 			$metadata = str_replace('utf-16', 'utf-8', $metadata );
 			$metadata = simplexml_load_string( $metadata );
@@ -144,7 +143,7 @@
 			$a = sha1( $b . $metadata->eid . 'A2DC51DE0F8BC1E9' );
 
 			$this->url_cdn = 'https://cdn.turbofilm.tv/' . sha1( TurboFilm::$config['language'] ) . '/' . (int)$metadata->eid . '/'
-				 . ( !empty( $metadata->sources2->h1 ) ? $metadata->sources2->hq : $metadata->sources2->default )
+				 . ( !empty( $metadata->sources2->hq ) ? $metadata->sources2->hq : $metadata->sources2->default )
 				 . '/0/' . TurboFilm::_makeCookie() . '/' . $b . '/' . $a . '/r';
 
 			$this->eid = (int)$metadata->eid;
