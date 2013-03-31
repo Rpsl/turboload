@@ -8,12 +8,30 @@
 	date_default_timezone_set('Europe/Moscow');
 
 	$pid_file = realpath( __DIR__ ) . '/download.pid';
+    $pid = getmypid();
 
+    if( !$pid )
+    {
+        // @todo что тут делать ?
+        die();
+    }
 
-	// TODO По хорошему, в pid файл нужно класть getmypid() и тут не просто умирать,
-	// а проверять есть ли процесс с таким pid. Если его нету, то грохать pid файл и продолжать работу.
-	// Отрефакторите, а?
-	if( file_exists( $pid_file ) ){ die(); }
+    // Проверяем что у нас не просто есть пид, а что такой процесс действительно живет.
+    if ( file_exists($pid_file) )
+    {
+        $check_pid = file_get_contents( $pid_file );
+
+        // @todo В windows рабоатть не будеь
+        if( !file_exists( "/proc/$check_pid" ) )
+        {
+            @unlink( $pid_file );
+        }
+        else
+        {
+            die();
+        }
+
+    }
 
 	//	На моем насе были проблемы с вызовом mkdir(). Функция не хотела работать,
 	//	в то время, как вызовы нативных команд работали прекрасно.
@@ -21,6 +39,7 @@
 	//	В итоге оказалось проще все подобные вызовы перевести на shell_exec()
 
 	shell_exec('touch ' . $pid_file );
+    shell_exec("echo '$pid' > " . $pid_file );
 
 	require_once( realpath( __DIR__ ) . '/includes/simple_html_dom.php');
 	require_once( realpath( __DIR__ ) . '/includes/class.phpmailer-lite.php');
