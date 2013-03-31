@@ -1,4 +1,4 @@
-<?
+<?php
 	class TurboFilm
 	{
 		static public $config = array();
