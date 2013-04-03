@@ -26,7 +26,8 @@
         if( !file_exists( "/proc/$check_pid" ) )
         {
             @unlink( $pid_file );
-        } else
+        }
+        else
         {
             die();
         }

@@ -165,7 +165,8 @@
                         $ep = new Episode( 'https://turbofilm.tv' . $ser->href );
 
                         TurboFilm::_curl( 'https://turbofilm.tv/services/epwatch', array( 'eid' => $ep->eid, 'watch' => 0 ) );
-                    } else
+                    }
+                    else
                     {
                         return 102;
                     }
@@ -235,7 +236,8 @@
             if( $httpCode == 200 )
             {
                 return $data;
-            } else
+            }
+            else
             {
                 l( 'Not normal http respoce code / ' . $url . ' / ' . $httpCode . ' / ' . $error );
             }
@@ -260,7 +262,8 @@
             if( !empty( $found[ 1 ][ 0 ] ) )
             {
                 return $found[ 1 ][ 0 ];
-            } else
+            }
+            else
             {
                 l( 'COOKIE VALUE NON FOUND', 0 );
 

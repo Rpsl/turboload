@@ -78,7 +78,8 @@
             if( preg_match( '~Описание серии "(.*?)"~ui', $name, $f_name ) )
             {
                 $this->name = html_entity_decode( 's' . $found[ 2 ] . 'e' . sprintf( '%1$02d', $found[ 3 ] ) . ' ' . $f_name[ 1 ] );
-            } else
+            }
+            else
             {
                 l( 'Cant detect name of episode / ' . $name );
 
@@ -100,7 +101,8 @@
                     l( 'EP:  Filesize is broken, remove file', 2 );
 
                     @unlink( $this->path );
-                } else
+                }
+                else
                 {
                     return FALSE;
                 }
@@ -232,7 +234,8 @@
                 {
                     TurboFilm::_curl( 'https://turbofilm.tv/services/epwatch', array( 'eid' => $this->eid, 'watch' => 1 ) );
                 }
-            } else
+            }
+            else
             {
                 l( 'Считаем загрузку не успешной, удаляем ' . $this->path );
                 shell_exec( 'rm -f ' . $this->path );
