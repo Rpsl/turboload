@@ -73,7 +73,7 @@
 
         echo $string . "\n";
 
-        shell_exec( escapeshellcmd( 'echo [' . date( 'Y/m/d H:i:s' ) . '] ' . escapeshellarg( $string ) . ' >> ' . TurboFilm::$config[ 'log_file' ] ) );
+        shell_exec('echo ' . escapeshellarg( '[' . date( 'Y/m/d H:i:s' ) . '] ' . $string ) . ' >> ' . TurboFilm::$config[ 'log_file' ]);
     }
 
     l( "start" );
@@ -99,8 +99,11 @@
 
     @unlink( $pid_file );
 
-    // Ну, на всякий случай
-    shell_exec( 'chown -R ' . TurboFilm::$config[ 'owner' ] . ' ' . TurboFilm::$config[ 'download_dir' ] );
+    if( !empty(  TurboFilm::$config[ 'owner' ] ) )
+    {
+        shell_exec( 'chown -R ' . TurboFilm::$config[ 'owner' ] . ' ' . TurboFilm::$config[ 'download_dir' ] );
+    }
+
     shell_exec( 'chmod -R 0777 ' . TurboFilm::$config[ 'download_dir' ] );
 
     l( "\n\n\n" );
