@@ -1,289 +1,286 @@
 <?php
 
-	/**
-	 * Episode
-	 *
-	 * Обеспечивает взаимодействие на уровне одной серии.
-	 * - Парсинг данных
-	 * - Генерация урла
-	 * - Скачивание серии
-	 * - Уведомление по email
-	 *
-	 * Example:
-	 *
-	 *      $ep = new Episode('https://turbofilm.tv/Watch/BreakingBad/Season2/Episode1');
-	 *      $ep->download();
-	 *      unset( $ep );
-	 *
-	 */
-	class Episode
-	{
-		private $data = array();
+    /**
+     * Episode
+     *
+     * Обеспечивает взаимодействие на уровне одной серии.
+     * - Парсинг данных
+     * - Генерация урла
+     * - Скачивание серии
+     * - Уведомление по email
+     *
+     * Example:
+     *
+     *      $ep = new Episode('https://turbofilm.tv/Watch/BreakingBad/Season2/Episode1');
+     *      $ep->download();
+     *      unset( $ep );
+     *
+     */
+    class Episode
+    {
+        private $data = array();
 
-		public function __construct( $url )
-		{
-			$this->url = $url;
+        public function __construct( $url )
+        {
+            $this->url = $url;
 
-			$this->parse();
-		}
+            $this->parse();
+        }
 
-		public function __get( $param )
-		{
-			if ( array_key_exists( $param, $this->data ) )
-			{
-				return $this->data[ $param ];
-			}
+        public function __get( $param )
+        {
+            if( array_key_exists( $param, $this->data ) )
+            {
+                return $this->data[ $param ];
+            }
 
-			return FALSE;
-		}
+            return FALSE;
+        }
 
-		public function __set( $param, $value = NULL )
-		{
-			$this->data[ $param ] = $value;
-		}
+        public function __set( $param, $value = NULL )
+        {
+            $this->data[ $param ] = $value;
+        }
 
-		public function __isset( $param )
-	    {
-	        return isset( $this->data[ $param ] );
-	    }
+        public function __isset( $param )
+        {
+            return isset( $this->data[ $param ] );
+        }
 
-		public function parse()
-		{
-			preg_match( '~https://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->url, $found );
+        public function parse()
+        {
+            preg_match( '~https://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->url, $found );
 
-			if( empty( $found ) )
-			{
-				l('EP:	INVALIDE URL EPISODE: ' . $this->url . ' | ' . __LINE__ , 2 );
-				return FALSE;
-			}
+            if( empty( $found ) )
+            {
+                l( 'EP:	INVALIDE URL EPISODE: ' . $this->url . ' | ' . __LINE__, 2 );
 
-			$res = TurboFilm::_curl( $this->url );
+                return FALSE;
+            }
 
-			if( empty( $res) )
-			{
-				l('EP:	Empty body: '. $this->url . ' | '. __LINE__, 2 );
-				return FALSE;
-			}
+            $res = TurboFilm::_curl( $this->url );
 
-			$html = str_get_html( $res );
+            if( empty( $res ) )
+            {
+                l( 'EP:	Empty body: ' . $this->url . ' | ' . __LINE__, 2 );
 
-			$name = $html->find('.tdesc', 0);
-			$name = $name->plaintext;
+                return FALSE;
+            }
 
-			$serial_name = $html->find('.mains a', 0);
-			$serial_name = $serial_name->plaintext;
+            $html = str_get_html( $res );
 
-			if( preg_match('~Описание серии "(.*?)"~ui', $name, $f_name ) )
-			{
-				$this->name = html_entity_decode( 's'.$found[2].'e'.sprintf('%1$02d', $found[3]).' ' . $f_name[1] );
-			}
-			else
-			{
-				l('Cant detect name of episode / '. $name );
-				return FALSE;
-			}
+            $name = $html->find( '.tdesc', 0 );
+            $name = $name->plaintext;
 
-			$this->serial_name = $serial_name;
-			$this->path = TurboFilm::$config['download_dir'] . '/' . $serial_name . '/Season ' . $found[2] . '/' . $this->name .'.mp4';
+            $serial_name = $html->find( '.mains a', 0 );
+            $serial_name = $serial_name->plaintext;
 
-			if( file_exists( $this->path ) )
-			{
-				l('EP:	File already exists: ' . $this->path, 2 );
+            if( preg_match( '~Описание серии "(.*?)"~ui', $name, $f_name ) )
+            {
+                $this->name = html_entity_decode( 's' . $found[ 2 ] . 'e' . sprintf( '%1$02d', $found[ 3 ] ) . ' ' . $f_name[ 1 ] );
+            } else
+            {
+                l( 'Cant detect name of episode / ' . $name );
 
-				// Что бы не кэшировать
-				clearstatcache();
+                return FALSE;
+            }
 
-				if( filesize( $this->path ) < 100 )
-				{
-					l('EP:  Filesize is broken, remove file', 2 );
+            $this->serial_name = $serial_name;
+            $this->path        = TurboFilm::$config[ 'download_dir' ] . '/' . $serial_name . '/Season ' . $found[ 2 ] . '/' . $this->name . '.mp4';
 
-					@unlink( $this->path );
-				}
-				else
-				{
-					return FALSE;
-				}
-			}
+            if( file_exists( $this->path ) )
+            {
+                l( 'EP:	File already exists: ' . $this->path, 2 );
 
-			$this->makeUrl( $html );
+                // Что бы не кэшировать
+                clearstatcache();
 
-			return TRUE;
-		}
+                if( filesize( $this->path ) < 100 )
+                {
+                    l( 'EP:  Filesize is broken, remove file', 2 );
 
-		public function makeUrl( $html )
-		{
-			$metadata = $html->find('#metadata', 0)->value;
+                    @unlink( $this->path );
+                } else
+                {
+                    return FALSE;
+                }
+            }
 
-			$metadata = urldecode( $metadata );
+            $this->makeUrl( $html );
 
-			$f = array("2", "I", "0", "=", "3", "Q", "8", "V", "7", "X", "G", "M", "R", "U", "H", "4", "1", "Z", "5", "D", "N", "6", "L", "9", "B", "W");
-			$t = array("x", "u", "Y", "o", "k", "n", "g", "r", "m", "T", "w", "f", "d", "c", "e", "s", "i", "l", "y", "t", "p", "b", "z", "a", "J", "v");
+            return TRUE;
+        }
 
-			$i=0;
+        public function makeUrl( $html )
+        {
+            $metadata = $html->find( '#metadata', 0 )->value;
 
-			while( $i < count( $f ) )
-			{
-				$metadata = self::_enc_replace_ab( $t[$i], $f[$i], $metadata );
-				$i++;
-			}
+            $metadata = urldecode( $metadata );
 
-			$metadata = base64_decode( $metadata .'', TRUE );
+            $f = array( "2", "I", "0", "=", "3", "Q", "8", "V", "7", "X", "G", "M", "R", "U", "H", "4", "1", "Z", "5", "D", "N", "6", "L", "9", "B", "W" );
+            $t = array( "x", "u", "Y", "o", "k", "n", "g", "r", "m", "T", "w", "f", "d", "c", "e", "s", "i", "l", "y", "t", "p", "b", "z", "a", "J", "v" );
 
-			if( empty( $metadata ) ){ l('Cant decode metadata / '. $this->url . ' / ' . __LINE__ ); }
+            $i = 0;
 
-			$metadata = str_replace('utf-16', 'utf-8', $metadata );
-			$metadata = simplexml_load_string( $metadata );
+            while( $i < count( $f ) )
+            {
+                $metadata = self::_enc_replace_ab( $t[ $i ], $f[ $i ], $metadata );
+                $i++;
+            }
 
-			if( !self::_checkEpisodeParams( $metadata ) )
-			{
-				return FALSE;
-			}
+            $metadata = base64_decode( $metadata . '', TRUE );
 
-			$b = sha1( TurboFilm::_makeCookie() . rand(1000,9999));
-			$a = sha1( $b . $metadata->eid . 'A2DC51DE0F8BC1E9' );
+            if( empty( $metadata ) )
+            {
+                l( 'Cant decode metadata / ' . $this->url . ' / ' . __LINE__ );
+            }
 
-			$this->url_cdn = 'https://cdn.turbofilm.tv/' . sha1( TurboFilm::$config['language'] ) . '/' . (int)$metadata->eid . '/'
-				 . ( !empty( $metadata->sources2->hq ) ? $metadata->sources2->hq : $metadata->sources2->default )
-				 . '/0/' . TurboFilm::_makeCookie() . '/' . $b . '/' . $a . '/r';
+            $metadata = str_replace( 'utf-16', 'utf-8', $metadata );
+            $metadata = simplexml_load_string( $metadata );
 
-			$this->eid = (int)$metadata->eid;
+            if( !self::_checkEpisodeParams( $metadata ) )
+            {
+                return FALSE;
+            }
 
-			return TRUE;
-		}
+            $b = sha1( TurboFilm::_makeCookie() . rand( 1000, 9999 ) );
+            $a = sha1( $b . $metadata->eid . 'A2DC51DE0F8BC1E9' );
 
-		static private function _enc_replace_ab( $e, $d, $c )
-		{
-			$c = str_replace($e, '___', $c);
-			$c = str_replace($d, $e, $c );
-			$c = str_replace('___',$d, $c );
+            $this->url_cdn = 'https://cdn.turbofilm.tv/' . sha1( TurboFilm::$config[ 'language' ] ) . '/' . (int)$metadata->eid . '/' . ( !empty( $metadata->sources2->hq ) ? $metadata->sources2->hq : $metadata->sources2->default ) . '/0/' . TurboFilm::_makeCookie() . '/' . $b . '/' . $a . '/r';
 
-			return $c;
-		}
+            $this->eid = (int)$metadata->eid;
 
-		/**
-		 * @static
-		 *
-		 * Проверка параметров данной серии.
-		 * - Язык
-		 * - Качество
-		 *
-		 * @param $metadata
-		 *
-		 * @return bool
-		 */
-		static private function _checkEpisodeParams( $metadata )
-		{
-			$return = TRUE;
+            return TRUE;
+        }
 
-			// Не качать если хотим только hq
-			if( !empty( TurboFilm::$config['only_hq'] ) && empty( $metadata->hq ) )
-			{
-				l('Серия не доступна в hq, пропускаем');
-				$return = FALSE;
-			}
+        static private function _enc_replace_ab( $e, $d, $c )
+        {
+            $c = str_replace( $e, '___', $c );
+            $c = str_replace( $d, $e, $c );
+            $c = str_replace( '___', $d, $c );
 
-			// Не качать если нету нашего языка
-			if( empty( $metadata->langs->{ TurboFilm::$config['language'] } ) )
-			{
-				l('У серии нету нашего языка, пропускаем');
-				$return = FALSE;
-			}
+            return $c;
+        }
 
-			return $return;
-		}
+        /**
+         * @static
+         *
+         * Проверка параметров данной серии.
+         * - Язык
+         * - Качество
+         *
+         * @param $metadata
+         *
+         * @return bool
+         */
+        static private function _checkEpisodeParams( $metadata )
+        {
+            $return = TRUE;
 
-		/**
-		 * Скачивание серии.
-		 *
-		 * Скачивание происходит с помощью wget, т.к. это самый
-		 * простой способ поддерживать переходы и докачку файла при обрыве потока.
-		 *
-		 * Проверяется код ответа wget и только если он успешный (int) 0 серия считается скачаной.
-		 * Если код ответа отличается, то попытка считается не успешной и файл удаляется.
-		 *
-		 * Если серия скачалась и в конфиге есть соответсвующая настройка, то серия отмечается как просмотренная.
-		 *
-		 */
-		public function download()
-		{
-			// Сюда нужно запилить проверку, что все данные есть и серию можно скачивать.
+            // Не качать если хотим только hq
+            if( !empty( TurboFilm::$config[ 'only_hq' ] ) && empty( $metadata->hq ) )
+            {
+                l( 'Серия не доступна в hq, пропускаем' );
+                $return = FALSE;
+            }
 
-			l('Начинаем загрузку: ' . $this->name . ' | ' . $this->path );
+            // Не качать если нету нашего языка
+            if( empty( $metadata->langs->{TurboFilm::$config[ 'language' ]} ) )
+            {
+                l( 'У серии нету нашего языка, пропускаем' );
+                $return = FALSE;
+            }
 
-			$path = pathinfo( $this->path ) ;
+            return $return;
+        }
 
-			shell_exec( 'mkdir -p ' . escapeshellarg( $path['dirname'] ) );
+        /**
+         * Скачивание серии.
+         *
+         * Скачивание происходит с помощью wget, т.к. это самый
+         * простой способ поддерживать переходы и докачку файла при обрыве потока.
+         *
+         * Проверяется код ответа wget и только если он успешный (int) 0 серия считается скачаной.
+         * Если код ответа отличается, то попытка считается не успешной и файл удаляется.
+         *
+         * Если серия скачалась и в конфиге есть соответсвующая настройка, то серия отмечается как просмотренная.
+         *
+         */
+        public function download()
+        {
+            // Сюда нужно запилить проверку, что все данные есть и серию можно скачивать.
 
-			l('Старт загрузки: ' . $this->url );
+            l( 'Начинаем загрузку: ' . $this->name . ' | ' . $this->path );
 
-			exec(
-				TurboFilm::$config['tools']['wget'] . ' --no-check-certificate --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . escapeshellarg( $this->path ).' '. escapeshellarg( $this->url_cdn ),
-				$output,
-				$retvar
-			);
+            $path = pathinfo( $this->path );
 
-			l('Загрузка завершенна, код wget: '. $retvar );
+            shell_exec( 'mkdir -p ' . escapeshellarg( $path[ 'dirname' ] ) );
 
-			if( $retvar === 0 )
-			{
-				l('[!] Считаем загрузку успешной / ' . $this->name . ' / ' . $this->path );
+            l( 'Старт загрузки: ' . $this->url );
 
-				$this->downloaded = TRUE;
+            exec( TurboFilm::$config[ 'tools' ][ 'wget' ] . ' --no-check-certificate --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . escapeshellarg( $this->path ) . ' ' . escapeshellarg( $this->url_cdn ), $output, $retvar );
 
-				if( !empty( TurboFilm::$config['watch'] ) )
-				{
-					TurboFilm::_curl('https://turbofilm.tv/services/epwatch', array('eid' => $this->eid, 'watch' => 1) );
-				}
-			}
-			else
-			{
-				l('Считаем загрузку не успешной, удаляем '. $this->path );
-				shell_exec('rm -f ' . $this->path );
-			}
-		}
+            l( 'Загрузка завершенна, код wget: ' . $retvar );
 
-		/**
-		 * Проверяем скачался ли эпизод и если необходимо, то отправляем уведомление по email
-		 */
-		public function sendEmail()
-		{
-			// Не будем отправлять уведомления для одной серии больше чем 1 раз
-			if( $this->emailed === TRUE )
-			{
-				return FALSE;
-			}
+            if( $retvar === 0 )
+            {
+                l( '[!] Считаем загрузку успешной / ' . $this->name . ' / ' . $this->path );
 
-			if( $this->downloaded === TRUE && !empty( TurboFilm::$config['email'] ) )
-			{
-				$mail = new PHPMailerLite();
+                $this->downloaded = TRUE;
 
-				// А вдруг туда именнованый масив засунут?
-				$mail->SetFrom( TurboFilm::$config['email'][0], 'TurboLoader');
+                if( !empty( TurboFilm::$config[ 'watch' ] ) )
+                {
+                    TurboFilm::_curl( 'https://turbofilm.tv/services/epwatch', array( 'eid' => $this->eid, 'watch' => 1 ) );
+                }
+            } else
+            {
+                l( 'Считаем загрузку не успешной, удаляем ' . $this->path );
+                shell_exec( 'rm -f ' . $this->path );
+            }
+        }
 
-				foreach( TurboFilm::$config['email'] as $email )
-				{
-					$mail->AddAddress( $email );
-				}
+        /**
+         * Проверяем скачался ли эпизод и если необходимо, то отправляем уведомление по email
+         */
+        public function sendEmail()
+        {
+            // Не будем отправлять уведомления для одной серии больше чем 1 раз
+            if( $this->emailed === TRUE )
+            {
+                return FALSE;
+            }
 
-				$mail->Subject = 'TurboLoader | ' . $this->serial_name . ' | '. $this->name ;
+            if( $this->downloaded === TRUE && !empty( TurboFilm::$config[ 'email' ] ) )
+            {
+                $mail = new PHPMailerLite();
 
-				$mail->MsgHTML('<html><p>Серия '. $this->url .' закачана.</p><p>&nbsp;</p><p>'. $this->path .'</p></html>');
+                // А вдруг туда именнованый масив засунут?
+                $mail->SetFrom( TurboFilm::$config[ 'email' ][ 0 ], 'TurboLoader' );
 
-				$mail->Send();
+                foreach( TurboFilm::$config[ 'email' ] as $email )
+                {
+                    $mail->AddAddress( $email );
+                }
 
-				$this->emailed = TRUE;
+                $mail->Subject = 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name;
 
-				return TRUE;
-			}
+                $mail->MsgHTML( '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>' );
 
-			return FALSE;
-		}
+                $mail->Send();
 
-		/**
-		 * При умирании, дернем отправку уведомлений, что бы не делать это руками.
-		 */
-		public function __destruct()
-		{
-			$this->sendEmail();
-		}
-	}
+                $this->emailed = TRUE;
+
+                return TRUE;
+            }
+
+            return FALSE;
+        }
+
+        /**
+         * При умирании, дернем отправку уведомлений, что бы не делать это руками.
+         */
+        public function __destruct()
+        {
+            $this->sendEmail();
+        }
+    }
