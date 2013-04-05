@@ -53,7 +53,7 @@
 
             if( empty( $found ) )
             {
-                l( 'EP:	INVALIDE URL EPISODE: ' . $this->url . ' | ' . __LINE__, 2 );
+                l( 'EP:	INVALIDE URL EPISODE: ' . $this->url . ' | ' . __LINE__ );
 
                 return FALSE;
             }
@@ -62,7 +62,7 @@
 
             if( empty( $res ) )
             {
-                l( 'EP:	Empty body: ' . $this->url . ' | ' . __LINE__, 2 );
+                l( 'EP:	Empty body: ' . $this->url . ' | ' . __LINE__);
 
                 return FALSE;
             }
@@ -91,14 +91,14 @@
 
             if( file_exists( $this->path ) )
             {
-                l( 'EP:	File already exists: ' . $this->path, 2 );
+                l( 'EP:	File already exists: ' . $this->path);
 
                 // Что бы не кэшировать
                 clearstatcache();
 
                 if( filesize( $this->path ) < 100 )
                 {
-                    l( 'EP:  Filesize is broken, remove file', 2 );
+                    l( 'EP:  Filesize is broken, remove file' );
 
                     @unlink( $this->path );
                 }

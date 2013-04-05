@@ -39,13 +39,13 @@
          */
         static public function getNewSeries()
         {
-            l( 'Запрашиваем список новых серий', 2 );
+            l( 'Запрашиваем список новых серий' );
 
             $res = self::_curl( 'https://turbofilm.tv/My/Series' );
 
             if( empty( $res ) )
             {
-                l( 'null body, ' . __LINE__, 1 );
+                l( 'null body, ' . __LINE__ );
 
                 return FALSE;
             }
@@ -56,7 +56,7 @@
 
             if( empty( $res ) )
             {
-                l( 'Новых серий не обнаруженно' . __LINE__, 2 );
+                l( 'Новых серий не обнаруженно' . __LINE__ );
 
                 return FALSE;
             }
@@ -265,7 +265,7 @@
             }
             else
             {
-                l( 'COOKIE VALUE NON FOUND', 0 );
+                l( 'COOKIE VALUE NON FOUND' );
 
                 return FALSE;
             }

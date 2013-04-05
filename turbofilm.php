@@ -54,16 +54,9 @@
 
     /**
      * Логгиррование происходящего в системе.
-     *
-     * $level:
-     *  1 - NOTICE | WARNING | CRITICAL
-     *  2 - INFO
-     *  3 - DEBUG
-     *
      * @param $string
-     * @param int $level
      */
-    function l( $string, $level = 0 )
+    function l( $string )
     {
         // На некоторых примитивных устройствах ( роутеры/насы )
         // проще весь вывод транслитировать чем разбираться с локалями и кодировками.
