@@ -34,16 +34,17 @@
 
     }
 
-    //	На моем насе были проблемы с вызовом mkdir(). Функция не хотела работать,
-    //	в то время, как вызовы нативных команд работали прекрасно.
-    //	Быть может это из-за SPARC, но там супер урезанный линукс и пыха в таком состояние.
-    //	В итоге оказалось проще все подобные вызовы перевести на shell_exec()
+    // На моем насе были проблемы с вызовом mkdir(). Функция не хотела работать,
+    // в то время, как вызовы нативных команд работали прекрасно.
+    // Быть может это из-за SPARC, но там супер урезанный линукс и пыха в таком состояние.
+    // В итоге оказалось проще все подобные вызовы перевести на shell_exec()
 
     shell_exec( 'touch ' . $pid_file );
     shell_exec( "echo '$pid' > " . $pid_file );
 
     require_once( realpath( __DIR__ ) . '/includes/simple_html_dom.php' );
     require_once( realpath( __DIR__ ) . '/includes/class.phpmailer-lite.php' );
+    require_once( realpath( __DIR__ ) . '/includes/smtp.php' );
 
     require_once( realpath( __DIR__ ) . '/includes/etask.class.php' );
     require_once( realpath( __DIR__ ) . '/includes/episode.class.php' );

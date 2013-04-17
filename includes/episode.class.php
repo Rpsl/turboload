@@ -53,7 +53,7 @@
 
             if( empty( $found ) )
             {
-                l( 'EP:	INVALIDE URL EPISODE: ' . $this->url . ' | ' . __LINE__ );
+                l( 'EP:    INVALIDE URL EPISODE: ' . $this->url . ' | ' . __LINE__ );
 
                 return FALSE;
             }
@@ -62,7 +62,7 @@
 
             if( empty( $res ) )
             {
-                l( 'EP:	Empty body: ' . $this->url . ' | ' . __LINE__);
+                l( 'EP:    Empty body: ' . $this->url . ' | ' . __LINE__);
 
                 return FALSE;
             }
@@ -91,7 +91,7 @@
 
             if( file_exists( $this->path ) )
             {
-                l( 'EP:	File already exists: ' . $this->path);
+                l( 'EP:    File already exists: ' . $this->path);
 
                 // Что бы не кэшировать
                 clearstatcache();
@@ -255,23 +255,48 @@
 
             if( $this->downloaded === TRUE && !empty( TurboFilm::$config[ 'email' ] ) )
             {
-                $mail = new PHPMailerLite();
-
-                // А вдруг туда именнованый масив засунут?
-                $mail->SetFrom( TurboFilm::$config[ 'email' ][ 0 ], 'TurboLoader' );
-
-                foreach( TurboFilm::$config[ 'email' ] as $email )
+                try
                 {
-                    $mail->AddAddress( $email );
+                    if( TurboFilm::$config[ 'use_smtp' ] )
+                    {
+                        $smtp = new Smtp( TurboFilm::$config[ 'smtp' ][ 'server' ], TurboFilm::$config[ 'smtp' ][ 'port' ] );
+
+                        $smtp->auth( TurboFilm::$config[ 'smtp' ][ 'login' ], TurboFilm::$config[ 'smtp' ][ 'password' ] );
+                        $smtp->from( TurboFilm::$config[ 'smtp' ][ 'login' ], 'TurboLoader' );
+
+                        $smtp->to( implode( ', ', TurboFilm::$config[ 'email' ] ) );
+
+                        $smtp->subject( 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name, 'text/html' );
+                        $smtp->text( '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>' );
+
+                        $smtp->send();
+                    }
+                    else
+                    {
+
+                        $mail = new PHPMailerLite();
+
+                        $mail->SetFrom( reset( TurboFilm::$config[ 'email' ] ), 'TurboLoader' );
+
+                        foreach( TurboFilm::$config[ 'email' ] as $email )
+                        {
+                            $mail->AddAddress( $email );
+                        }
+
+                        $mail->Subject = 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name;
+
+                        $mail->MsgHTML( '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>' );
+
+                        $mail->Send();
+                    }
+
+                    $this->emailed = TRUE;
                 }
-
-                $mail->Subject = 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name;
-
-                $mail->MsgHTML( '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>' );
-
-                $mail->Send();
-
-                $this->emailed = TRUE;
+                catch( Exception $e )
+                {
+                    $this->emailed = FALSE;
+                    return FALSE;
+                }
 
                 return TRUE;
             }
