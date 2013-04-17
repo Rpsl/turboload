@@ -41,7 +41,7 @@
 
         'cookie_file'   => realpath(__DIR__) . '/cookie.txt',
         'tools'         => array(
-            'wget'      => '/usr/bin/wget'
+            'wget'      => trim( `which wget` )
         ),
         'only_hq'       => FALSE,
         'owner'         => 'admin:admin',
