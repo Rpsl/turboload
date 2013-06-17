@@ -277,6 +277,6 @@
          */
         static public function deleteNullFiles()
         {
-            exec( 'find ' . escapeshellarg( TurboFilm::$config[ 'download_dir' ] ) . ' -iname "*.mp4" -size 0c -print0 | xargs rm -f {}\;', $output, $retval );
+            exec( 'find ' . escapeshellarg( TurboFilm::$config[ 'download_dir' ] ) . ' -iname "*.mp4" -size 0c -delete', $output, $retval );
         }
     }
