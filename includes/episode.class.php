@@ -18,6 +18,9 @@
      */
     class Episode
     {
+        private $name;
+        private $serial_name;
+        private $path;
         private $data = array();
 
         public function __construct( $url )
