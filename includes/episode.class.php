@@ -84,7 +84,7 @@
             }
             else
             {
-                l( 'Cant detect name of episode / ' . $name );
+                l( 'cant detect name of episode / ' . $name );
 
                 return FALSE;
             }
@@ -137,7 +137,7 @@
 
             if( empty( $metadata ) )
             {
-                l( 'Cant decode metadata / ' . $this->url . ' / ' . __LINE__ );
+                l( 'cant decode metadata / ' . $this->url . ' / ' . __LINE__ );
             }
 
             $metadata = str_replace( 'utf-16', 'utf-8', $metadata );
@@ -185,14 +185,14 @@
             // Не качать если хотим только hq
             if( !empty( TurboFilm::$config[ 'only_hq' ] ) && empty( $metadata->hq ) )
             {
-                l( 'Серия не доступна в hq, пропускаем' );
+                l( 'dont have HQ quality. Skipped.' );
                 $return = FALSE;
             }
 
             // Не качать если нету нашего языка
             if( empty( $metadata->langs->{TurboFilm::$config[ 'language' ]} ) )
             {
-                l( 'У серии нету нашего языка, пропускаем' );
+                l( 'dont have language ' );
                 $return = FALSE;
             }
 
@@ -215,21 +215,21 @@
         {
             // Сюда нужно запилить проверку, что все данные есть и серию можно скачивать.
 
-            l( 'Начинаем загрузку: ' . $this->name . ' | ' . $this->path );
+            l( 'start downloading: ' . $this->name . ' | ' . $this->path );
 
             $path = pathinfo( $this->path );
 
             shell_exec( 'mkdir -p ' . escapeshellarg( $path[ 'dirname' ] ) );
 
-            l( 'Старт загрузки: ' . $this->url );
+            l( 'url: ' . $this->url );
 
             exec( TurboFilm::$config[ 'tools' ][ 'wget' ] . ' --no-check-certificate --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . escapeshellarg( $this->path ) . ' ' . escapeshellarg( $this->url_cdn ), $output, $retvar );
 
-            l( 'Загрузка завершенна, код wget: ' . $retvar );
+            l( 'downloading finished, wget exit code: ' . $retvar );
 
             if( $retvar === 0 )
             {
-                l( '[!] Считаем загрузку успешной / ' . $this->name . ' / ' . $this->path );
+                l( '[!] downloading is ok / ' . $this->name . ' / ' . $this->path );
 
                 $this->downloaded = TRUE;
 
@@ -240,7 +240,7 @@
             }
             else
             {
-                l( 'Считаем загрузку не успешной, удаляем ' . $this->path );
+                l( 'downloading is broken, removed ' . $this->path );
                 shell_exec( 'rm -f ' . $this->path );
             }
         }

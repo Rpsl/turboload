@@ -39,7 +39,7 @@
          */
         static public function getNewSeries()
         {
-            l( 'Запрашиваем список новых серий' );
+            l( 'fetch list new episodes' );
 
             $res = self::_curl( 'https://turbofilm.tv/My/Series' );
 
@@ -56,7 +56,7 @@
 
             if( empty( $res ) )
             {
-                l( 'Новых серий не обнаруженно' . __LINE__ );
+                l( 'no new episodes' . __LINE__ );
 
                 return FALSE;
             }
@@ -76,7 +76,7 @@
                         {
                             $task->addEpisode( $ep );
 
-                            l( 'Серия ' . $ep->name . ' добавленна в очередь' );
+                            l( 'episod ' . $ep->name . ' added in queue' );
                         }
                     }
                 }
@@ -90,7 +90,7 @@
          */
         static public function getAllSeries()
         {
-            l( 'Начинаем процесс скачивания всех серий' );
+            l( 'start downloading all episodes' );
 
             self::_getMySerials();
         }
@@ -102,7 +102,7 @@
 
             if( empty( $res ) )
             {
-                l( 'Empty body / ' . __LINE__ );
+                l( 'empty body / ' . __LINE__ );
 
                 return FALSE;
             }
@@ -113,12 +113,11 @@
 
             foreach( $serials->find( 'a' ) as $ser )
             {
-                $seasons = array();
                 $seasons = self::_getSeasonsOfSerial( 'https://turbofilm.tv' . $ser->href );
 
                 if( empty( $seasons ) )
                 {
-                    l( 'Не нашли сезонов / ' . $ser->href );
+                    l( 'you dont have subscriptions / ' . $ser->href );
 
                     return FALSE;
                 }
@@ -141,13 +140,13 @@
 
             foreach( $urls as $url )
             {
-                l( 'Запрашиваем список серий сериала / ' . $url );
+                l( 'fetch serial episodes / ' . $url );
 
                 $res = self::_curl( 'https://turbofilm.tv' . $url );
 
                 if( empty( $res ) )
                 {
-                    l( 'Empty body / ' . $url . ' / ' . __LINE__ );
+                    l( 'empty body / ' . $url . ' / ' . __LINE__ );
 
                     return FALSE;
                 }
@@ -155,8 +154,6 @@
                 $html = str_get_html( $res );
 
                 $res = $html->find( '.sserieslistbox', 0 )->find( 'a' );
-
-                $series = array();
 
                 foreach( $res as $ser )
                 {
@@ -176,7 +173,7 @@
 
         static private function _getSeasonsOfSerial( $url )
         {
-            l( 'Получаю спиок сезонов / ' . $url );
+            l( 'fetch episodes list / ' . $url );
 
             $res = self::_curl( $url );
 
@@ -239,7 +236,7 @@
             }
             else
             {
-                l( 'Not normal http respoce code / ' . $url . ' / ' . $httpCode . ' / ' . $error );
+                l( 'not normal http respoce code / ' . $url . ' / ' . $httpCode . ' / ' . $error );
             }
         }
 
@@ -265,7 +262,7 @@
             }
             else
             {
-                l( 'COOKIE VALUE NON FOUND' );
+                l( 'cookie values not found' );
 
                 return FALSE;
             }
