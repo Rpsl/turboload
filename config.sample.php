@@ -3,7 +3,6 @@
     /*
         login       - Ваш логин
         password    - Ваш пароль
-        watch       - Отмечать серию как просмотренную после скачивания
         language    - Язык на котором скачивать серию
         tasks       - Максимальное кол-во серий скачиваемых за раз
         email       - email для уведомлений
@@ -29,7 +28,6 @@
     TurboFilm::$config = array(
         'login'         => 'login',
         'password'      => 'password',
-        'watch'         => 1,
         'language'      => 'ru', // ru | en
         'tasks'         => 5,
         'email'         => array('mail@me.com'),

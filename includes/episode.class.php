@@ -104,21 +104,12 @@
 
             if( file_exists( $this->path ) )
             {
-                l( 'EP:    File already exists: ' . $this->path);
+                l( 'EP:    File already exists, remove ' . $this->path);
+
+                @unlink( $this->path );
 
                 // Что бы не кэшировать
                 clearstatcache();
-
-                if( filesize( $this->path ) < 100 )
-                {
-                    l( 'EP:  Filesize is broken, remove file' );
-
-                    @unlink( $this->path );
-                }
-                else
-                {
-                    return FALSE;
-                }
             }
 
             $this->makeUrl( $html );
@@ -243,10 +234,7 @@
 
                 $this->downloaded = TRUE;
 
-                if( !empty( TurboFilm::$config[ 'watch' ] ) )
-                {
-                    TurboFilm::_curl( 'https://turbofilm.tv/services/epwatch', array( 'eid' => $this->eid, 'watch' => 1 ) );
-                }
+                TurboFilm::_curl( 'https://turbofilm.tv/services/epwatch', array( 'eid' => $this->eid, 'watch' => 1 ) );
             }
             else
             {
