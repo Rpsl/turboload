@@ -267,8 +267,8 @@
 
                         $smtp->to( implode( ', ', TurboFilm::$config[ 'email' ] ) );
 
-                        $smtp->subject( 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name, 'text/html' );
-                        $smtp->text( '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>' );
+                        $smtp->subject( 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name);
+                        $smtp->text( '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>', 'text/html'  );
 
                         $smtp->send();
                     }
@@ -284,6 +284,7 @@
                             $mail->AddAddress( $email );
                         }
 
+                        $mail->IsHTML(TRUE);
                         $mail->Subject = 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name;
 
                         $mail->MsgHTML( '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>' );
