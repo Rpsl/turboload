@@ -76,7 +76,7 @@
                         {
                             $task->addEpisode( $ep );
 
-                            l( 'episod ' . $ep->name . ' added in queue' );
+                            l( 'episode ' . $ep->getName() . ' added in queue' );
                         }
                     }
                 }

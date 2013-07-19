@@ -50,6 +50,16 @@
             return isset( $this->data[ $param ] );
         }
 
+        public function getName()
+        {
+            return $this->name;
+        }
+
+        public function getPath()
+        {
+            return $this->path;
+        }
+
         public function parse()
         {
             preg_match( '~https://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->url, $found );
