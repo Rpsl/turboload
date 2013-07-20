@@ -23,6 +23,13 @@
         private $path;
         private $data = array();
 
+        /**
+         * Символы которые будут вырезаны из названия серии.
+         *
+         * @var array
+         */
+        private $replace_in_name = array(':');
+
         public function __construct( $url )
         {
             $this->url = $url;
@@ -91,6 +98,7 @@
             if( preg_match( '~Описание серии "(.*?)"~ui', $name, $f_name ) )
             {
                 $this->name = html_entity_decode( 's' . $found[ 2 ] . 'e' . sprintf( '%1$02d', $found[ 3 ] ) . ' ' . $f_name[ 1 ] );
+                $this->name = str_replace( $this->replace_in_name, '', $this->name );
             }
             else
             {
