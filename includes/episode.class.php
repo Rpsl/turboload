@@ -266,39 +266,26 @@
             {
                 try
                 {
-                    if( TurboFilm::$config[ 'use_smtp' ] )
-                    {
-                        $smtp = new Smtp( TurboFilm::$config[ 'smtp' ][ 'server' ], TurboFilm::$config[ 'smtp' ][ 'port' ] );
+                    $ch = curl_init();
 
-                        $smtp->auth( TurboFilm::$config[ 'smtp' ][ 'login' ], TurboFilm::$config[ 'smtp' ][ 'password' ] );
-                        $smtp->from( TurboFilm::$config[ 'smtp' ][ 'login' ], 'TurboLoader' );
+                    curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+                    curl_setopt($ch, CURLOPT_USERPWD, TurboFilm::$config['mailgun']['api-key']);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
-                        $smtp->to( implode( ', ', TurboFilm::$config[ 'email' ] ) );
+                    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+                    curl_setopt($ch, CURLOPT_URL, 'https://api.mailgun.net/v2/'. TurboFilm::$config['mailgun']['domain'] .'/messages');
+                    curl_setopt($ch, CURLOPT_POSTFIELDS,
+                        array(
+                            'from'    => 'Turbofilm downloader <turboload@'. TurboFilm::$config['mailgun']['domain'].'>',
+                            'to'      => implode(', ', TurboFilm::$config['email']),
+                            'subject' => 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name,
+                            'text'    => 'Серия ' . $this->url . ' закачана.',
+                            'html'    => '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>',
+                        )
+                    );
 
-                        $smtp->subject( 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name);
-                        $smtp->text( '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>', 'text/html'  );
-
-                        $smtp->send();
-                    }
-                    else
-                    {
-
-                        $mail = new PHPMailerLite();
-
-                        $mail->SetFrom( reset( TurboFilm::$config[ 'email' ] ), 'TurboLoader' );
-
-                        foreach( TurboFilm::$config[ 'email' ] as $email )
-                        {
-                            $mail->AddAddress( $email );
-                        }
-
-                        $mail->IsHTML(TRUE);
-                        $mail->Subject = 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name;
-
-                        $mail->MsgHTML( '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>' );
-
-                        $mail->Send();
-                    }
+                    curl_exec($ch);
+                    curl_close($ch);
 
                     $this->emailed = TRUE;
                 }

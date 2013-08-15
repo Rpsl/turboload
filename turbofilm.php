@@ -43,8 +43,6 @@
     shell_exec( "echo '$pid' > " . $pid_file );
 
     require_once( realpath( __DIR__ ) . '/includes/simple_html_dom.php' );
-    require_once( realpath( __DIR__ ) . '/includes/class.phpmailer-lite.php' );
-    require_once( realpath( __DIR__ ) . '/includes/smtp.php' );
 
     require_once( realpath( __DIR__ ) . '/includes/etask.class.php' );
     require_once( realpath( __DIR__ ) . '/includes/episode.class.php' );
