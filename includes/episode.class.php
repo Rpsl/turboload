@@ -277,6 +277,7 @@
                     curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
                     curl_setopt($ch, CURLOPT_USERPWD, TurboFilm::$config['mailgun']['api-key']);
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE );
 
                     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
                     curl_setopt($ch, CURLOPT_URL, 'https://api.mailgun.net/v2/'. TurboFilm::$config['mailgun']['domain'] .'/messages');
