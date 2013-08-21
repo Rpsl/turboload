@@ -97,7 +97,15 @@
 
             if( preg_match( '~Описание серии "(.*?)"~ui', $name, $f_name ) )
             {
-                $this->name = html_entity_decode( 's' . $found[ 2 ] . 'e' . sprintf( '%1$02d', $found[ 3 ] ) . ' ' . $f_name[ 1 ] );
+//                $this->name = html_entity_decode( 's' . $found[ 2 ] . 'e' . sprintf( '%1$02d', $found[ 3 ] ) . ' ' . $f_name[ 1 ] );
+                $s_name = $html->find('title', 0);
+                $s_name = $s_name->plaintext;
+
+                // fuck fuck fuck
+                preg_match('~^(.*?) — (.*?)$~', $s_name, $found2 );
+
+                $this->name = $found2[1];
+
                 $this->name = str_replace( $this->replace_in_name, '', $this->name );
             }
             else
