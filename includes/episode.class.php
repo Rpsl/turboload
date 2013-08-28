@@ -28,7 +28,7 @@
          *
          * @var array
          */
-        private $replace_in_name = array(':');
+        private $replace_in_name = array(':', '/');
 
         public function __construct( $url )
         {
