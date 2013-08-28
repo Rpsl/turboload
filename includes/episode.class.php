@@ -104,7 +104,7 @@
                 preg_match('~^(.*?) — (.*?)$~', $s_name, $found2 );
 
                 $this->name = html_entity_decode( 's' . $found[ 2 ] . 'e' . sprintf( '%1$02d', $found[3] ) . ' ' . $found2[1] );
-                $this->name = str_replace( $this->replace_in_name, '', $this->name );
+                $this->name = str_replace( $this->replace_in_name, ' ', $this->name );
             }
             else
             {
@@ -238,7 +238,7 @@
 
             l( 'url: ' . $this->url );
 
-            exec( TurboFilm::$config[ 'tools' ][ 'wget' ] . ' --no-check-certificate --random-wait -t 100 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . escapeshellarg( $this->path ) . ' ' . escapeshellarg( $this->url_cdn ), $output, $retvar );
+            exec( TurboFilm::$config[ 'tools' ][ 'wget' ] . ' --no-check-certificate --random-wait -t 10 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . escapeshellarg( $this->path ) . ' ' . escapeshellarg( $this->url_cdn ), $output, $retvar );
 
             l( 'downloading finished, wget exit code: ' . $retvar );
 
