@@ -346,12 +346,14 @@
                     $data = http_build_query( $data );
 
                     $opts = array(
-                        'http' =>   array(
-                            'method' => 'POST',
-                            'header' =>
-                            "Content-type: application/x-www-form-urlencoded\r\n".
-                            "Content-Length: " . strlen($data) . "\r\n".
-                            "Authorization: Basic " . base64_encode( TurboFilm::$config['mailgun']['api-key'] ) . "\r\n",
+                        'http' => array(
+                            'method'  => 'POST',
+
+                            'header'  =>
+                                "Content-type: application/x-www-form-urlencoded\r\n" .
+                                "Content-Length: " . strlen( $data ) . "\r\n" .
+                                "Authorization: Basic " . base64_encode( TurboFilm::$config['mailgun']['api-key'] ) . "\r\n",
+
                             'content' => $data
                         )
                     );
