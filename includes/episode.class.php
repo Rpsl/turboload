@@ -335,29 +335,33 @@
             {
                 try
                 {
-                    $ch = curl_init();
+                    $data = array(
+                        'from'    => 'Turbofilm downloader <turboload@'. TurboFilm::$config['mailgun']['domain'].'>',
+                        'to'      => implode(', ', TurboFilm::$config['email']),
+                        'subject' => 'TurboLoader | ' . $this->serial_name . ' | ' . $this->episode_name,
+                        'text'    => 'Серия ' . $this->url . ' закачана.',
+                        'html'    => '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->getPath() . '</p></html>',
+                    );
 
-                    curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-                    curl_setopt($ch, CURLOPT_USERPWD, TurboFilm::$config['mailgun']['api-key']);
-                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE );
+                    $data = http_build_query( $data );
 
-                    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-                    curl_setopt($ch, CURLOPT_URL, 'https://api.mailgun.net/v2/'. TurboFilm::$config['mailgun']['domain'] .'/messages');
-                    curl_setopt($ch, CURLOPT_POSTFIELDS,
-                        array(
-                            'from'    => 'Turbofilm downloader <turboload@'. TurboFilm::$config['mailgun']['domain'].'>',
-                            'to'      => implode(', ', TurboFilm::$config['email']),
-                            'subject' => 'TurboLoader | ' . $this->serial_name . ' | ' . $this->episode_name,
-                            'text'    => 'Серия ' . $this->url . ' закачана.',
-                            'html'    => '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->getPath() . '</p></html>',
+                    $opts = array(
+                        'http' =>   array(
+                            'method' => 'POST',
+                            'header' =>
+                            "Content-type: application/x-www-form-urlencoded\r\n".
+                            "Content-Length: " . strlen($data) . "\r\n".
+                            "Authorization: Basic " . base64_encode( TurboFilm::$config['mailgun']['api-key'] ) . "\r\n",
+                            'content' => $data
                         )
                     );
 
-                    curl_exec($ch);
-                    curl_close($ch);
+                    $stream = stream_context_create( $opts );
+
+                    file_get_contents('https://api.mailgun.net/v2/'.TurboFilm::$config['mailgun']['domain'].'/messages', false, $stream );
 
                     $this->emailed = TRUE;
+
                 }
                 catch( Exception $e )
                 {
