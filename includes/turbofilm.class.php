@@ -39,7 +39,7 @@
          */
         static public function getNewSeries()
         {
-            l( 'fetch list new episodes' );
+            l( 'fetch list of new episodes' );
 
             $res = self::_curl( 'https://turbofilm.tv/My/Series' );
 
@@ -69,10 +69,19 @@
                 {
                     if( $task->ok() && preg_match( '~/Watch/~u', $url->href ) )
                     {
-                        $ep = new Episode( 'https://turbofilm.tv' . $url->href );
+                        try
+                        {
+                            $ep = new Episode( 'https://turbofilm.tv' . $url->href );
+                        }
+                        catch( Exception $e )
+                        {
+                            $ep = FALSE;
+                        }
 
                         // Если есть url_cdn, то получается что серия распарсилась и подходит под параметры
-                        if( !empty( $ep->url_cdn ) )
+                        $url = $ep->getUrl();
+
+                        if( !empty( $url ) )
                         {
                             $task->addEpisode( $ep );
 
@@ -159,9 +168,16 @@
                 {
                     if( $task->ok() )
                     {
-                        $ep = new Episode( 'https://turbofilm.tv' . $ser->href );
+                        try
+                        {
+                            $ep = new Episode( 'https://turbofilm.tv' . $ser->href );
 
-                        TurboFilm::_curl( 'https://turbofilm.tv/services/epwatch', array( 'eid' => $ep->eid, 'watch' => 0 ) );
+                            TurboFilm::_curl( 'https://turbofilm.tv/services/epwatch', array( 'eid' => $ep->getEid(), 'watch' => 0 ) );
+                        }
+                        catch( Exception $e )
+                        {
+
+                        }
                     }
                     else
                     {
@@ -237,6 +253,7 @@
             else
             {
                 l( 'not normal http respoce code / ' . $url . ' / ' . $httpCode . ' / ' . $error );
+                return FALSE;
             }
         }
 

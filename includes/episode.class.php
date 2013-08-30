@@ -18,121 +18,184 @@
      */
     class Episode
     {
-        private $name;
         private $serial_name;
-        private $path;
         private $data = array();
+
+        private $emailed = FALSE;
+        private $downloaded = FALSE;
+
+        private $episode_html_page;
+        private $episode_name;
+
+        private $url_cdn;
+        private $eid;
+
 
         /**
          * Символы которые будут вырезаны из названия серии.
          *
          * @var array
          */
-        private $replace_in_name = array(':', '/');
+        private $replace_in_name    = array(':', '/');
+        private $replace_in_name_to = array('', ' ');
 
         public function __construct( $url )
         {
+            $res = preg_match( '~https://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $url, $found );
+
+            if( empty( $res ) )
+            {
+                l( 'EP:INVALIDE URL EPISODE: ' . $url . ' | ' . __LINE__ );
+                throw new Exception('');
+            }
+
             $this->url = $url;
 
             $this->parse();
         }
 
-        public function __get( $param )
-        {
-            if( array_key_exists( $param, $this->data ) )
-            {
-                return $this->data[ $param ];
-            }
+//        public function __get( $param )
+//        {
+//            if( array_key_exists( $param, $this->data ) )
+//            {
+//                return $this->data[ $param ];
+//            }
+//
+//            return FALSE;
+//        }
+//
+//        public function __set( $param, $value = NULL )
+//        {
+//            $this->data[ $param ] = $value;
+//        }
+//
+//        public function __isset( $param )
+//        {
+//            return isset( $this->data[ $param ] );
+//        }
 
-            return FALSE;
+        // говнометоды, юзаются в turbofilm.class.php
+        public function getUrl()
+        {
+            return $this->url_cdn;
         }
 
-        public function __set( $param, $value = NULL )
+        // говнометоды, юзаются в turbofilm.class.php
+        public function getEid()
         {
-            $this->data[ $param ] = $value;
-        }
-
-        public function __isset( $param )
-        {
-            return isset( $this->data[ $param ] );
+            return $this->eid;
         }
 
         public function getName()
         {
-            return $this->name;
-        }
-
-        public function getPath()
-        {
-            return $this->path;
+            return $this->episode_name;
         }
 
         public function parse()
         {
-            preg_match( '~https://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->url, $found );
 
-            if( empty( $found ) )
-            {
-                l( 'EP:    INVALIDE URL EPISODE: ' . $this->url . ' | ' . __LINE__ );
+            $this->episode_html_page = TurboFilm::_curl( $this->url );
 
-                return FALSE;
-            }
-
-            $res = TurboFilm::_curl( $this->url );
-
-            if( empty( $res ) )
+            if( empty( $this->episode_html_page ) )
             {
                 l( 'EP:    Empty body: ' . $this->url . ' | ' . __LINE__);
 
                 return FALSE;
             }
 
-            $html = str_get_html( $res );
-
-            $name = $html->find( '.tdesc', 0 );
-            $name = $name->plaintext;
-
-            $serial_name = $html->find( '.mains a', 0 );
-            $serial_name = $serial_name->plaintext;
-
-            if( preg_match( '~Описание серии "(.*?)"~ui', $name, $f_name ) )
+            if( strstr( $this->episode_html_page, '<title>Привет, я Турбофильм!</title>' ) )
             {
-                $s_name = $html->find('title', 0);
-                $s_name = $s_name->plaintext;
-
-                // fuck fuck fuck
-                preg_match('~^(.*?) — (.*?)$~', $s_name, $found2 );
-
-                $this->name = html_entity_decode( 's' . $found[ 2 ] . 'e' . sprintf( '%1$02d', $found[3] ) . ' ' . $found2[1] );
-                $this->name = str_replace( $this->replace_in_name, ' ', $this->name );
-            }
-            else
-            {
-                l( 'cant detect name of episode / ' . $name );
-
+                l('EP: Serial removed, use proxy Luke.');
                 return FALSE;
             }
 
-            $this->serial_name = $serial_name;
-            $this->path        = TurboFilm::$config[ 'download_dir' ] . '/' . $serial_name . '/Season ' . $found[ 2 ] . '/' . $this->name . '.mp4';
 
-            if( file_exists( $this->path ) )
+
+            $this->getEpisodeName();
+            $this->getSerialName();
+            $this->getPath();
+
+            if( file_exists( $this->getPath() ) )
             {
-                l( 'EP:    File already exists, remove ' . $this->path);
+                l( 'EP: File already exists, remove ' . $this->getPath() );
 
-                @unlink( $this->path );
+                @unlink( $this->getPath() );
 
                 // Что бы не кэшировать
                 clearstatcache();
             }
 
-            $this->makeUrl( $html );
+            $this->makeUrl();
 
             return TRUE;
         }
 
-        public function makeUrl( $html )
+        private function getEpisodeName()
         {
+            $html = str_get_html( $this->episode_html_page );
+
+            $name = $html->find( 'title', 0 );
+            $name = $name->plaintext;
+            $name = explode('—', $name );
+            $name = trim( $name[0] );
+
+            $prefix = $this->getEpisodePrefix();
+
+            $name = $prefix .' '. $name;
+
+            $name = html_entity_decode( $name );
+            $name = strip_tags( $name );
+            $name = str_replace( $this->replace_in_name, $this->replace_in_name_to, $name );
+
+            $this->episode_name = $name;
+
+//            throw new Exception('');
+        }
+
+        private function getEpisodePrefix()
+        {
+            return 's'.$this->getSeasonNumber().'e'.$this->getEpisodeNumber();
+        }
+
+        private function getSeasonNumber()
+        {
+            preg_match( '~https://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->url, $found );
+
+            return $found[2];
+        }
+
+        private function getEpisodeNumber()
+        {
+            preg_match( '~https://turbofilm.tv/Watch/([a-z0-9]+)/Season([\d]+)/Episode([\d]+)~ui', $this->url, $found );
+
+            return sprintf( '%1$02d', $found[3] );
+        }
+
+        private function getSerialName()
+        {
+            $html = str_get_html( $this->episode_html_page );
+            $this->serial_name = $html->find( '.mains a.en', 0 )->plaintext;
+
+//            throw new Exception('');
+        }
+
+        private function getPath()
+        {
+            $path =
+                TurboFilm::$config[ 'download_dir' ] .'/'.
+                $this->serial_name
+                .'/Season '.
+                $this->getSeasonNumber() .'/'.
+                $this->episode_name . '.mp4';
+
+            return $path;
+        }
+
+
+        public function makeUrl()
+        {
+            $html = str_get_html( $this->episode_html_page );
+
             $metadata = $html->find( '#metadata', 0 )->value;
 
             $metadata = urldecode( $metadata );
@@ -230,21 +293,21 @@
         {
             // Сюда нужно запилить проверку, что все данные есть и серию можно скачивать.
 
-            l( 'start downloading: ' . $this->name . ' | ' . $this->path );
+            l( 'start downloading: ' . $this->episode_name . ' | ' . $this->getPath() );
 
-            $path = pathinfo( $this->path );
+            $path = pathinfo( $this->getPath() );
 
             shell_exec( 'mkdir -p ' . escapeshellarg( $path[ 'dirname' ] ) );
 
             l( 'url: ' . $this->url );
 
-            exec( TurboFilm::$config[ 'tools' ][ 'wget' ] . ' --no-check-certificate --random-wait -t 10 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . escapeshellarg( $this->path ) . ' ' . escapeshellarg( $this->url_cdn ), $output, $retvar );
+            exec( TurboFilm::$config[ 'tools' ][ 'wget' ] . ' --no-check-certificate --random-wait -t 10 --retry-connrefused -U="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"  -O ' . escapeshellarg( $this->getPath() ) . ' ' . escapeshellarg( $this->url_cdn ), $output, $retvar );
 
             l( 'downloading finished, wget exit code: ' . $retvar );
 
             if( $retvar === 0 )
             {
-                l( '[!] downloading is ok / ' . $this->name . ' / ' . $this->path );
+                l( '[!] downloading is ok / ' . $this->episode_name . ' / ' . $this->getPath() );
 
                 $this->downloaded = TRUE;
 
@@ -252,8 +315,8 @@
             }
             else
             {
-                l( 'downloading is broken, removed ' . $this->path );
-                shell_exec( 'rm -f ' . $this->path );
+                l( 'downloading is broken, removed ' . $this->getPath() );
+                shell_exec( 'rm -f ' . $this->getPath() );
             }
         }
 
@@ -285,9 +348,9 @@
                         array(
                             'from'    => 'Turbofilm downloader <turboload@'. TurboFilm::$config['mailgun']['domain'].'>',
                             'to'      => implode(', ', TurboFilm::$config['email']),
-                            'subject' => 'TurboLoader | ' . $this->serial_name . ' | ' . $this->name,
+                            'subject' => 'TurboLoader | ' . $this->serial_name . ' | ' . $this->episode_name,
                             'text'    => 'Серия ' . $this->url . ' закачана.',
-                            'html'    => '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->path . '</p></html>',
+                            'html'    => '<html><p>Серия ' . $this->url . ' закачана.</p><p>&nbsp;</p><p>' . $this->getPath() . '</p></html>',
                         )
                     );
 
